@@ -2,16 +2,17 @@
 import React, { useState } from 'react';
 import { Player } from '../types';
 import { IconGem, IconCoin, IconExchange } from './Icons';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface ExchangeViewProps {
   player: Player;
   onExchange: (gems: number) => void;
+  currentRate: number; // Dynamic Rate passed from App
 }
 
-export const ExchangeView: React.FC<ExchangeViewProps> = ({ player, onExchange }) => {
+export const ExchangeView: React.FC<ExchangeViewProps> = ({ player, onExchange, currentRate }) => {
   const [amount, setAmount] = useState<number>(1);
-  const RATE = 250; // 1 Gem = 250 Silver
+  const AVERAGE_RATE = 235; // (74+397)/2 approx
 
   const handleExchange = () => {
       if (amount > 0 && player.gems >= amount) {
@@ -24,6 +25,8 @@ export const ExchangeView: React.FC<ExchangeViewProps> = ({ player, onExchange }
       setAmount(player.gems);
   }
 
+  const isRateHigh = currentRate > AVERAGE_RATE;
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in duration-500 max-w-xl mx-auto">
         <div className="w-full bg-[#1c1917] border border-stone-800 rounded-xl p-8 shadow-2xl relative overflow-hidden">
@@ -32,7 +35,23 @@ export const ExchangeView: React.FC<ExchangeViewProps> = ({ player, onExchange }
              <div className="text-center mb-8">
                  <IconExchange size={48} className="mx-auto text-amber-500 mb-4" />
                  <h2 className="text-3xl rpg-font text-stone-200 mb-2">Karaborsa Takasçısı</h2>
-                 <p className="text-stone-500 text-sm italic">"Mücevherlerin parıltısı güzeldir, ama gümüş karın doyurur."</p>
+                 <p className="text-stone-500 text-sm italic">"Kurlar dalgalanır, ama gümüşün sesi hep aynıdır."</p>
+             </div>
+
+             {/* Rate Display */}
+             <div className="flex justify-center mb-6">
+                 <div className={`flex items-center gap-3 px-6 py-3 rounded-full border-2 ${isRateHigh ? 'bg-green-950/30 border-green-800 text-green-400' : 'bg-red-950/30 border-red-800 text-red-400'}`}>
+                     <div className="flex flex-col items-center leading-none">
+                         <span className="text-[10px] font-bold uppercase tracking-widest text-stone-500">Güncel Kur</span>
+                         <span className="text-2xl font-mono font-bold">{currentRate}</span>
+                     </div>
+                     <div className="h-8 w-px bg-stone-700 mx-2"></div>
+                     {isRateHigh ? (
+                         <div className="flex items-center gap-1 text-xs font-bold uppercase"><TrendingUp size={16} /> Yüksek</div>
+                     ) : (
+                         <div className="flex items-center gap-1 text-xs font-bold uppercase"><TrendingDown size={16} /> Düşük</div>
+                     )}
+                 </div>
              </div>
 
              <div className="bg-stone-900/50 p-6 rounded-lg border border-stone-800 mb-8 flex items-center justify-between gap-4">
@@ -45,8 +64,8 @@ export const ExchangeView: React.FC<ExchangeViewProps> = ({ player, onExchange }
                  <ArrowRight className="text-stone-600" />
                  <div className="text-center flex-1">
                      <div className="text-stone-500 text-xs uppercase font-bold mb-1">Alınan</div>
-                     <div className="text-2xl font-bold text-amber-400 flex items-center justify-center gap-2">
-                        <IconCoin size={24} /> {amount * RATE}
+                     <div className="text-2xl font-bold text-slate-300 flex items-center justify-center gap-2">
+                        <IconCoin size={24} /> {Math.floor(amount * currentRate).toLocaleString('tr-TR')}
                      </div>
                  </div>
              </div>

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Item, Player, Rarity, ItemType } from '../types';
-import { POTIONS, RUNES, UPGRADE_RATES } from '../constants';
+import { POTIONS, RUNES, UPGRADE_RATES, UPGRADE_MULTIPLIERS } from '../constants';
 import { IconSword, IconShield, IconArmor, IconHelmet, IconRelic, IconBag, IconRefresh, IconGem, IconHammer, IconScroll, IconCoin, IconEnergy, IconHeart, IconPaw, IconBoot, IconFire, IconIce, IconShock, IconPoison } from './Icons';
 import { Hammer, FlaskConical, Gem, ArrowRight, Flame, Skull, Zap, CheckCircle2 } from 'lucide-react';
 
@@ -67,7 +67,8 @@ export const ShopView: React.FC<ShopViewProps> = ({ player, shopInventory, onBuy
       // Base cost + (Level * BaseCost) + Rarity Multiplier roughly
       const base = item.cost * 0.5;
       const levelMult = (item.upgradeLevel || 0) + 1;
-      return Math.floor(base * levelMult);
+      // Reduced by 30% (* 0.7)
+      return Math.floor(base * levelMult * 0.7);
   }
 
   const handleTabChange = (tab: ShopTab) => {
@@ -90,11 +91,14 @@ export const ShopView: React.FC<ShopViewProps> = ({ player, shopInventory, onBuy
     // Determine current level for visual
     const currentLevel = item.upgradeLevel || 0;
     const isMaxLevel = isBlacksmith && currentLevel >= 9;
+    const isGlowing = item.upgradeLevel === 9; // +9 Shine Effect
 
     return (
       <div 
         key={item.id + (isBlacksmith ? '_up' : '')} 
-        className={`bg-stone-900 p-4 rounded-xl border-2 ${RarityBorder[item.rarity]} flex flex-col gap-3 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300`}
+        className={`bg-stone-900 p-4 rounded-xl border-2 flex flex-col gap-3 relative overflow-hidden group hover:shadow-xl hover:-translate-y-1 transition-all duration-300
+            ${isGlowing ? 'border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)] animate-pulse-slow' : RarityBorder[item.rarity]}
+        `}
       >
         {isOwned && (
           <div className="absolute top-2 right-2 bg-emerald-900/90 text-emerald-400 text-[10px] font-bold px-2 py-1 rounded border border-emerald-700 z-10 uppercase tracking-wider">
@@ -102,10 +106,10 @@ export const ShopView: React.FC<ShopViewProps> = ({ player, shopInventory, onBuy
           </div>
         )}
         
-        <div className="flex justify-center py-6 bg-stone-950/50 rounded-lg border-inner border-stone-800 relative">
+        <div className={`flex justify-center py-6 bg-stone-950/50 rounded-lg border-inner relative ${isGlowing ? 'border-yellow-500/30' : 'border-stone-800'}`}>
           <ItemIcon type={item.type} rarity={item.rarity} />
           {item.upgradeLevel ? (
-              <div className="absolute top-2 right-2 bg-amber-600 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow">
+              <div className={`absolute top-2 right-2 text-white text-xs font-bold px-1.5 py-0.5 rounded shadow ${isGlowing ? 'bg-yellow-500 text-black shadow-yellow-500/50' : 'bg-amber-600 border border-amber-600'}`}>
                   +{item.upgradeLevel}
               </div>
           ) : null}
@@ -124,7 +128,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ player, shopInventory, onBuy
 
         <div className="flex-1">
           <div className="flex justify-between items-start">
-             <h3 className={`font-bold text-base md:text-lg leading-tight ${RarityColor[item.rarity]}`}>{item.name}</h3>
+             <h3 className={`font-bold text-base md:text-lg leading-tight ${isGlowing ? 'text-yellow-400 drop-shadow-[0_0_5px_rgba(250,204,21,0.8)]' : RarityColor[item.rarity]}`}>{item.name}</h3>
              <span className={`text-[10px] uppercase font-bold tracking-wider px-1.5 rounded border ${RarityColor[item.rarity]} ${RarityBorder[item.rarity]} bg-black/40`}>
                  {item.rarity}
              </span>
@@ -171,7 +175,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ player, shopInventory, onBuy
                 <span>{isBlacksmith ? 'İşle' : 'Satın Al'}</span>
                 {!isMaxLevel && (
                     <div className="flex items-center gap-2 text-xs opacity-80">
-                        <span className="flex items-center gap-1"><IconCoin size={10}/> {costSilver}</span>
+                        <span className="flex items-center gap-1 text-slate-300"><IconCoin size={10}/> {costSilver.toLocaleString('tr-TR')}</span>
                         {item.costGems ? <span className="text-purple-300 flex items-center gap-1"><IconGem size={10} /> {item.costGems}</span> : null}
                     </div>
                 )}
@@ -202,7 +206,10 @@ export const ShopView: React.FC<ShopViewProps> = ({ player, shopInventory, onBuy
       const cost = getUpgradeCost(selectedUpgradeItem);
       const successRate = UPGRADE_RATES[nextLevel] || 0;
       const isRisky = successRate < 100;
-      const nextBonus = Math.max(selectedUpgradeItem.bonus + 1, Math.floor(selectedUpgradeItem.bonus * 1.2)); // Show accurate preview
+      
+      // New exact multiplier logic for preview
+      const multiplier = UPGRADE_MULTIPLIERS[nextLevel] || 0.1;
+      const nextBonus = Math.floor(selectedUpgradeItem.bonus * (1 + multiplier));
 
       // Inventory Runes
       const availableRunes = player.inventory.filter(i => i.type === 'rune');
@@ -250,7 +257,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ player, shopInventory, onBuy
                       </div>
 
                       {/* Stats & Risk */}
-                      <div className="bg-stone-950 p-4 rounded border border-stone-800 mb-4 space-y-2">
+                      <div className="bg-stone-900 p-4 rounded border border-stone-800 mb-4 space-y-2">
                           <div className="flex justify-between items-center">
                               <span className="text-stone-400 text-xs uppercase font-bold">Başarı Şansı</span>
                               <span className={`font-mono font-bold text-lg ${successRate >= 80 ? 'text-green-500' : successRate >= 50 ? 'text-yellow-500' : 'text-red-500'}`}>
@@ -267,8 +274,8 @@ export const ShopView: React.FC<ShopViewProps> = ({ player, shopInventory, onBuy
 
                           <div className="flex justify-between items-center border-t border-stone-800 pt-2">
                               <span className="text-stone-400 text-xs uppercase font-bold">İşlem Ücreti</span>
-                              <span className={`font-mono font-bold flex items-center gap-1 ${player.silver >= cost ? 'text-amber-400' : 'text-red-500'}`}>
-                                  <IconCoin size={14} /> {cost}
+                              <span className={`font-mono font-bold flex items-center gap-1 ${player.silver >= cost ? 'text-slate-300' : 'text-red-500'}`}>
+                                  <IconCoin size={14} /> {cost.toLocaleString('tr-TR')}
                               </span>
                           </div>
                       </div>
@@ -384,7 +391,7 @@ export const ShopView: React.FC<ShopViewProps> = ({ player, shopInventory, onBuy
           <h2 className="relative z-10 text-3xl rpg-font text-amber-500 mb-2">Pazar Meydanı</h2>
           <div className="relative z-10 flex justify-center gap-6 text-sm text-stone-400">
              <div className="flex items-center gap-2 bg-stone-950/50 px-4 py-1 rounded-full border border-stone-800">
-                 <IconCoin size={14} className="text-amber-500" /> {player.silver} Gümüş
+                 <IconCoin size={14} className="text-slate-300" /> {player.silver.toLocaleString('tr-TR')} Gümüş
              </div>
              <div className="flex items-center gap-2 bg-stone-950/50 px-4 py-1 rounded-full border border-stone-800">
                  <IconGem size={14} className="text-purple-500" /> {player.gems} Mücevher

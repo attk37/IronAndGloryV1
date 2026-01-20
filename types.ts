@@ -60,6 +60,62 @@ export interface PlayerRecords {
     questsCompleted: number;
 }
 
+// --- KINGDOM TYPES ---
+export interface Kingdom {
+    name: string;
+    level: number; // Castle Level
+    walls: number; // Defense Bonus
+    agriculture: number; // Food Gen
+    workshops: number; // Material Gen
+    housing: number; // New: Population Capacity/Growth
+    
+    population: number;
+    army: number;
+    armyLevel: number; // New: Army Quality
+    supplies: number; // Material for building
+    provisions: number; // Food for army
+    
+    territory: string[]; // Captured Map Node IDs
+    nodeCooldowns: Record<string, number>; // New: Node ID -> Timestamp when available
+}
+
+export interface MapNode {
+    id: string;
+    name: string;
+    type: 'village' | 'fortress' | 'capital' | 'kingdom_capital';
+    status: 'neutral' | 'hostile' | 'conquered';
+    difficulty: number; // Required Army Strength approx
+    x: number; // 0-100% position
+    y: number; // 0-100% position
+    rewards: {
+        silver: number;
+        supplies: number;
+        population: number;
+    };
+}
+
+export interface IncomingAttack {
+    id: string;
+    attackerName: string;
+    targetNodeName: string; // "Başkent" or Village Name
+    enemyStrength: number; // Army Size * Level
+    enemyCount: number;
+    arrivalTime: number; // Timestamp
+}
+
+export interface ActionReport {
+    title: string;
+    message: string;
+    rewards: {
+        silver?: number;
+        supplies?: number;
+        population?: number;
+        karma?: number;
+        army?: number;
+    };
+    type: 'success' | 'failure' | 'neutral';
+}
+
 export interface Player {
   name: string;
   race: Race;
@@ -95,8 +151,12 @@ export interface Player {
   inventory: Item[];
   inventorySlots: number; // Total unlocked slots
   properties: Record<string, number>; // Property ID -> Count owned
+  kingdom?: Kingdom; // New Kingdom Data
   records: PlayerRecords;
   claimedCodes: string[];
+  tutorialStep: number; // 0: Done, 1: Equip, 2: Nav Quest, 3: Start Quest, 4: Nav Work, 5: Start Work
+  exchangeRate: number; // Current silver per gem
+  lastExchangeUpdate: number; // Timestamp
 }
 
 export interface Enemy {

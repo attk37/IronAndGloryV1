@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Player } from '../types';
 import { calculatePlayerDamage, calculatePlayerDefense } from '../services/gameLogic';
-import { IconCrossedSwords, IconShield, IconSkull, IconEnergy, IconGem, IconHelmet } from './Icons';
+import { IconCrossedSwords, IconShield, IconSkull, IconEnergy, IconGem, IconHelmet, IconSword } from './Icons';
 import { Trophy } from 'lucide-react';
 
 interface DuelViewProps {
@@ -42,7 +42,6 @@ export const DuelView: React.FC<DuelViewProps> = ({ player, onDuelComplete, play
     const enemyLevel = Math.max(1, player.level + levelVariance);
     
     // Simulate enemy stats based on level
-    const baseStat = enemyLevel * 5;
     const enemyMaxHp = 60 + (enemyLevel * 15);
     const enemyDamage = 5 + (enemyLevel * 2);
     const enemyDefense = 2 + (enemyLevel * 1.5);
@@ -257,7 +256,7 @@ export const DuelView: React.FC<DuelViewProps> = ({ player, onDuelComplete, play
                         <h2 className="text-3xl rpg-font text-amber-500 mb-4">ZAFER!</h2>
                         <p className="text-stone-300 mb-6">Rakibini arenanın tozuna gömdün.</p>
                         <div className="flex justify-center gap-4 mb-8">
-                            <div className="bg-stone-950 px-4 py-2 rounded border border-amber-900 text-stone-300 font-bold">
+                            <div className="bg-stone-950 px-4 py-2 rounded border border-slate-700 text-slate-300 font-bold">
                                 +{duelResult.gold} Gümüş
                             </div>
                             {duelResult.gems > 0 && (
@@ -314,7 +313,7 @@ export const DuelView: React.FC<DuelViewProps> = ({ player, onDuelComplete, play
                             style={{ width: `${(duel.playerHp / duel.playerMaxHp) * 100}%` }}
                         />
                     </div>
-                    <div className="text-xs text-center mt-1 text-red-400 font-mono">{duel.playerHp}/{duel.playerMaxHp}</div>
+                    <div className="text-xs text-center mt-1 text-red-400 font-mono">{Math.floor(duel.playerHp)}/{duel.playerMaxHp}</div>
                     
                     {/* Visual Damage Effect */}
                     {actionEffect?.target === 'player' && (
@@ -347,7 +346,7 @@ export const DuelView: React.FC<DuelViewProps> = ({ player, onDuelComplete, play
                             style={{ width: `${(duel.enemyHp / duel.enemyMaxHp) * 100}%` }}
                         />
                     </div>
-                    <div className="text-xs text-center mt-1 text-red-400 font-mono">{duel.enemyHp}/{duel.enemyMaxHp}</div>
+                    <div className="text-xs text-center mt-1 text-red-400 font-mono">{Math.floor(duel.enemyHp)}/{duel.enemyMaxHp}</div>
 
                     {/* Visual Damage Effect */}
                     {actionEffect?.target === 'enemy' && (
@@ -379,7 +378,7 @@ export const DuelView: React.FC<DuelViewProps> = ({ player, onDuelComplete, play
                     disabled={!duel.isPlayerTurn}
                     className={`p-4 rounded border-2 flex flex-col items-center gap-2 transition-all ${duel.isPlayerTurn ? 'bg-stone-900 border-stone-700 hover:border-red-500 cursor-pointer hover:bg-stone-800' : 'bg-stone-950 border-stone-800 opacity-50 cursor-not-allowed'}`}
                 >
-                   <IconSkull size={24} className="text-red-500" />
+                   <IconSword size={24} className="text-red-500" />
                    <span className="text-xs font-bold uppercase">Ağır</span>
                 </button>
 
@@ -389,9 +388,15 @@ export const DuelView: React.FC<DuelViewProps> = ({ player, onDuelComplete, play
                     className={`p-4 rounded border-2 flex flex-col items-center gap-2 transition-all ${duel.isPlayerTurn ? 'bg-stone-900 border-stone-700 hover:border-blue-500 cursor-pointer hover:bg-stone-800' : 'bg-stone-950 border-stone-800 opacity-50 cursor-not-allowed'}`}
                 >
                    <IconShield size={24} className="text-blue-500" />
-                   <span className="text-xs font-bold uppercase">Defans</span>
+                   <span className="text-xs font-bold uppercase">Savunma</span>
                 </button>
             </div>
+            
+            {!duel.isPlayerTurn && (
+                <div className="text-center mt-4 text-stone-500 text-xs uppercase tracking-widest animate-pulse">
+                    Rakip hamle yapıyor...
+                </div>
+            )}
         </div>
       );
   }

@@ -18,17 +18,26 @@ interface JobCardProps {
     player: Player;
     onStartJob: (j: Job) => void;
     isWounded: boolean;
+    isTutorialHighlight?: boolean;
 }
 
-const JobCard: React.FC<JobCardProps> = ({ job, player, onStartJob, isWounded }) => {
+const JobCard: React.FC<JobCardProps> = ({ job, player, onStartJob, isWounded, isTutorialHighlight }) => {
     const isCriminal = job.type === JobType.CRIMINAL;
     const baseColor = isCriminal ? 'red' : 'emerald';
     const borderColor = isCriminal ? 'border-red-900/50' : 'border-emerald-900/50';
     const hoverBorder = isCriminal ? 'group-hover:border-red-600' : 'group-hover:border-emerald-500';
     const bgGradient = isCriminal ? 'from-red-950/20 to-stone-950' : 'from-emerald-950/20 to-stone-950';
 
+    const tutorialClass = isTutorialHighlight ? 'border-green-500 ring-4 ring-green-500/30 animate-pulse' : '';
+
+    // Calculate Scaled Rewards for Display (Matching App.tsx Logic)
+    const silverMultiplier = 1 + (player.level * 0.25);
+    const xpMultiplier = 1 + (player.level * 0.05);
+    const scaledSilver = Math.floor(job.silverReward * silverMultiplier);
+    const scaledXp = Math.floor(job.xpReward * xpMultiplier);
+
     return (
-        <div className={`group relative bg-[#151210] border-2 ${borderColor} ${hoverBorder} rounded-xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden`}>
+        <div className={`group relative bg-[#151210] border-2 ${borderColor} ${hoverBorder} rounded-xl p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden ${tutorialClass}`}>
             {/* Background Gradient Effect */}
             <div className={`absolute inset-0 bg-gradient-to-br ${bgGradient} opacity-50 group-hover:opacity-100 transition-opacity`} />
             
@@ -66,14 +75,14 @@ const JobCard: React.FC<JobCardProps> = ({ job, player, onStartJob, isWounded })
                 <div className="grid grid-cols-3 gap-2 bg-black/20 p-2 rounded border border-stone-800/50">
                     <div className="flex flex-col items-center">
                         <span className="text-[10px] text-stone-500 uppercase">Kazanç</span>
-                        <div className="text-amber-400 font-mono font-bold flex items-center gap-1">
-                            +{job.silverReward} <IconCoin size={10} />
+                        <div className="text-slate-300 font-mono font-bold flex items-center gap-1">
+                            +{scaledSilver.toLocaleString('tr-TR')} <IconCoin size={10} />
                         </div>
                     </div>
                     <div className="flex flex-col items-center border-l border-stone-800">
                         <span className="text-[10px] text-stone-500 uppercase">Tecrübe</span>
                         <div className="text-cyan-400 font-mono font-bold flex items-center gap-1">
-                            +{job.xpReward} <IconScroll size={10} />
+                            +{scaledXp.toLocaleString('tr-TR')} <IconScroll size={10} />
                         </div>
                     </div>
                     <div className="flex flex-col items-center border-l border-stone-800">
@@ -191,8 +200,15 @@ export const WorkView: React.FC<WorkViewProps> = ({ player, activeJob, jobEndTim
                       <h3 className="text-xl rpg-font text-stone-200">Şehir Meydanı</h3>
                   </div>
                   <div className="grid gap-4">
-                      {honestJobs.map(job => (
-                          <JobCard key={job.id} job={job} player={player} onStartJob={onStartJob} isWounded={isWounded} />
+                      {honestJobs.map((job, index) => (
+                          <JobCard 
+                            key={job.id} 
+                            job={job} 
+                            player={player} 
+                            onStartJob={onStartJob} 
+                            isWounded={isWounded} 
+                            isTutorialHighlight={player.tutorialStep === 5 && index === 0} // Highlight first job if tutorial
+                          />
                       ))}
                   </div>
               </div>

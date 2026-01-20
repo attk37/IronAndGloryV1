@@ -83,8 +83,8 @@ const BossCard = ({ region, player, onStart, isLocked }: { region: Region, playe
                 {/* Action */}
                 <div className="flex flex-col items-end gap-3 min-w-[150px]">
                     <div className="flex items-center gap-4 bg-black/40 px-3 py-2 rounded border border-white/5">
-                         <div className="text-amber-500 font-bold flex items-center gap-1"><IconCoin size={14}/> {bossQuest.enemyTemplate.silverReward}</div>
-                         <div className="text-cyan-500 font-bold flex items-center gap-1"><IconScroll size={14}/> {bossQuest.enemyTemplate.xpReward}</div>
+                         <div className="text-slate-300 font-bold flex items-center gap-1"><IconCoin size={14}/> {bossQuest.enemyTemplate.silverReward.toLocaleString('tr-TR')}</div>
+                         <div className="text-cyan-500 font-bold flex items-center gap-1"><IconScroll size={14}/> {bossQuest.enemyTemplate.xpReward.toLocaleString('tr-TR')}</div>
                     </div>
 
                     <button
@@ -111,11 +111,82 @@ const BossCard = ({ region, player, onStart, isLocked }: { region: Region, playe
     );
 }
 
+// Compact Horizontal Epic Quest Card
+const EpicMissionCard = ({ quest, player, onStart }: { quest: Quest, player: Player, onStart: (q: Quest) => void }) => {
+    const canAfford = player.energy >= quest.energyCost;
+    const isWounded = player.hp <= 5;
+    
+    // Calculate Win Chance Estimate
+    const levelDiff = player.level - quest.enemyTemplate.level;
+    let chance = 30; // Epic Base Chance
+    chance = Math.min(100, Math.max(10, chance + (levelDiff * 5)));
+
+    return (
+        <div className="relative w-full bg-[#150a15] border-2 border-purple-900/50 rounded-xl overflow-hidden group hover:border-purple-600 transition-all duration-300 shadow-lg hover:shadow-purple-900/20">
+            {/* Background */}
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-950/20 via-transparent to-transparent opacity-50" />
+            
+            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 p-5">
+                
+                {/* Visual */}
+                <div className="shrink-0 relative">
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full border-2 border-purple-500 bg-stone-900 flex items-center justify-center overflow-hidden shadow-[0_0_15px_rgba(168,85,247,0.3)]">
+                         <EnemyAvatar type={quest.enemyTemplate.imgUrl} />
+                    </div>
+                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-purple-900 text-purple-100 text-[9px] font-bold px-2 py-0.5 rounded border border-purple-700 uppercase tracking-widest whitespace-nowrap shadow-md">
+                        Destansı
+                    </div>
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 text-center md:text-left min-w-0">
+                    <h3 className="text-lg font-bold text-purple-100 mb-1 truncate">{quest.name}</h3>
+                    <p className="text-xs text-stone-400 italic mb-3 line-clamp-1">{quest.description}</p>
+                    
+                    <div className="flex flex-wrap justify-center md:justify-start gap-3 text-xs">
+                        <div className="flex items-center gap-1 text-stone-400 bg-black/40 px-2 py-1 rounded border border-stone-800/50">
+                            <IconSkull size={12} className="text-purple-500"/> <span>Lv.{quest.enemyTemplate.level} {quest.enemyTemplate.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-stone-400 bg-black/40 px-2 py-1 rounded border border-stone-800/50">
+                            <span className="text-stone-500 font-bold">Şans</span>
+                            <span className={`font-mono font-bold ${chance < 50 ? 'text-red-400' : 'text-green-400'}`}>%{chance}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex flex-col items-center md:items-end gap-3 min-w-[120px]">
+                    <div className="flex items-center justify-end gap-3 text-xs w-full bg-black/20 p-1.5 rounded-lg border border-white/5">
+                         <div className="text-slate-300 font-bold flex items-center gap-1" title="Gümüş"><IconCoin size={12}/> {quest.enemyTemplate.silverReward.toLocaleString('tr-TR')}</div>
+                         <div className="w-px h-3 bg-stone-700"></div>
+                         <div className="text-cyan-500 font-bold flex items-center gap-1" title="Tecrübe"><IconScroll size={12}/> {quest.enemyTemplate.xpReward.toLocaleString('tr-TR')}</div>
+                    </div>
+
+                    <button
+                        onClick={() => onStart(quest)}
+                        disabled={!canAfford || isWounded}
+                        className={`
+                            w-full px-4 py-2.5 rounded font-bold text-xs uppercase tracking-widest transition-all border flex items-center justify-center gap-2
+                            ${isWounded 
+                                ? 'bg-stone-900 border-stone-800 text-stone-600 cursor-not-allowed'
+                                : !canAfford
+                                    ? 'bg-stone-800 border-stone-700 text-stone-500'
+                                    : 'bg-purple-900 hover:bg-purple-800 text-purple-100 border-purple-700 hover:shadow-lg'}
+                        `}
+                    >
+                        {isWounded ? 'Yaralısın' : !canAfford ? `${quest.energyCost} Enerji` : <>Savaş <Swords size={14}/></>}
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    )
+}
+
 // 3-Tier Mission Card
-const MissionCard = ({ quest, player, onStart }: { quest: Quest, player: Player, onStart: (q: Quest) => void }) => {
+const MissionCard = ({ quest, player, onStart, isTutorialHighlight }: { quest: Quest, player: Player, onStart: (q: Quest) => void, isTutorialHighlight?: boolean }) => {
     const isHard = quest.difficulty === QuestDifficulty.HARD;
     const isNormal = quest.difficulty === QuestDifficulty.NORMAL;
-    const isEpic = quest.difficulty === QuestDifficulty.EPIC;
     
     const canAfford = player.energy >= quest.energyCost;
     const isWounded = player.hp <= 5;
@@ -123,8 +194,7 @@ const MissionCard = ({ quest, player, onStart }: { quest: Quest, player: Player,
     // Calculate Win Chance Estimate
     const levelDiff = player.level - quest.enemyTemplate.level;
     let chance = 95;
-    if (isEpic) chance = 30;
-    else if (isHard) chance = 50;
+    if (isHard) chance = 50;
     else if (isNormal) chance = 75;
     
     chance = Math.min(100, Math.max(10, chance + (levelDiff * 5)));
@@ -133,17 +203,18 @@ const MissionCard = ({ quest, player, onStart }: { quest: Quest, player: Player,
     if (chance < 50) riskColor = 'text-red-500';
     else if (chance < 80) riskColor = 'text-amber-500';
 
-    const cardBorder = isEpic ? 'border-purple-500/50' : isHard ? 'border-amber-900/30 hover:border-amber-700' : isNormal ? 'border-stone-800 hover:border-stone-600' : 'border-emerald-900/30 hover:border-emerald-700';
-    const bgEffect = isEpic ? 'bg-purple-950/10' : '';
+    const cardBorder = isTutorialHighlight 
+        ? 'border-green-500 ring-2 ring-green-500/50' 
+        : isHard ? 'border-amber-900/30 hover:border-amber-700' : isNormal ? 'border-stone-800 hover:border-stone-600' : 'border-emerald-900/30 hover:border-emerald-700';
 
     return (
         <div className={`
             relative flex flex-col justify-between h-full bg-[#151210] border-2 rounded-xl p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl group overflow-hidden
-            ${cardBorder} ${bgEffect}
+            ${cardBorder}
         `}>
              {/* Background Pattern */}
              <div className={`absolute inset-0 bg-gradient-to-b opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none
-                ${isEpic ? 'from-purple-900/20' : isHard ? 'from-amber-900/10' : isNormal ? 'from-stone-800/10' : 'from-emerald-900/10'} to-transparent
+                ${isHard ? 'from-amber-900/10' : isNormal ? 'from-stone-800/10' : 'from-emerald-900/10'} to-transparent
              `} />
 
              <div>
@@ -151,14 +222,14 @@ const MissionCard = ({ quest, player, onStart }: { quest: Quest, player: Player,
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex flex-col">
                         <span className={`text-[10px] font-bold uppercase tracking-widest mb-1 
-                            ${isEpic ? 'text-purple-400' : isHard ? 'text-amber-600' : isNormal ? 'text-stone-500' : 'text-emerald-600'}`}>
-                            {isEpic ? 'Destansı Görev' : isHard ? 'Zorlu Görev' : isNormal ? 'Normal Görev' : 'Kolay Görev'}
+                            ${isHard ? 'text-amber-600' : isNormal ? 'text-stone-500' : 'text-emerald-600'}`}>
+                            {isHard ? 'Zorlu Görev' : isNormal ? 'Normal Görev' : 'Kolay Görev'}
                         </span>
                         <h3 className="text-lg font-bold text-stone-200 leading-tight">{quest.name}</h3>
                     </div>
                     <div className={`p-2 rounded-lg border bg-stone-950 
-                        ${isEpic ? 'border-purple-900 text-purple-500' : isHard ? 'border-amber-900 text-amber-500' : isNormal ? 'border-stone-800 text-stone-500' : 'border-emerald-900 text-emerald-500'}`}>
-                        {isEpic ? <Crown size={20} /> : isHard ? <IconSkull size={20} /> : isNormal ? <Swords size={20} /> : <Shield size={20} />}
+                        ${isHard ? 'border-amber-900 text-amber-500' : isNormal ? 'border-stone-800 text-stone-500' : 'border-emerald-900 text-emerald-500'}`}>
+                        {isHard ? <IconSkull size={20} /> : isNormal ? <Swords size={20} /> : <Shield size={20} />}
                     </div>
                 </div>
 
@@ -173,7 +244,7 @@ const MissionCard = ({ quest, player, onStart }: { quest: Quest, player: Player,
                         </div>
                         <div>
                             <div className="text-xs font-bold text-stone-300">{quest.enemyTemplate.name}</div>
-                            <div className="text-[10px] text-stone-600">Sv. {quest.enemyTemplate.level}</div>
+                            <div className="text-xs text-stone-600">Sv. {quest.enemyTemplate.level}</div>
                         </div>
                     </div>
                     <div className="text-right">
@@ -187,12 +258,12 @@ const MissionCard = ({ quest, player, onStart }: { quest: Quest, player: Player,
              <div>
                  <div className="flex justify-between items-center mb-4 text-sm font-mono text-stone-400">
                      <div className="flex items-center gap-1.5" title="Gümüş Ödülü">
-                         <IconCoin size={14} className="text-amber-500" /> 
-                         <span>{quest.enemyTemplate.silverReward}</span>
+                         <IconCoin size={14} className="text-slate-300" /> 
+                         <span>{quest.enemyTemplate.silverReward.toLocaleString('tr-TR')}</span>
                      </div>
                      <div className="flex items-center gap-1.5" title="XP Ödülü">
                          <IconScroll size={14} className="text-cyan-500" /> 
-                         <span>{quest.enemyTemplate.xpReward}</span>
+                         <span>{quest.enemyTemplate.xpReward.toLocaleString('tr-TR')}</span>
                      </div>
                  </div>
 
@@ -205,8 +276,8 @@ const MissionCard = ({ quest, player, onStart }: { quest: Quest, player: Player,
                             ? 'bg-stone-900 border-stone-800 text-stone-600 cursor-not-allowed'
                             : !canAfford 
                                 ? 'bg-stone-800 border-stone-700 text-stone-500'
-                                : isEpic
-                                    ? 'bg-purple-900 hover:bg-purple-800 text-purple-100 border-purple-700'
+                                : isTutorialHighlight
+                                    ? 'bg-green-700 text-white border-green-500 animate-pulse shadow-[0_0_15px_rgba(34,197,94,0.5)]'
                                     : isHard 
                                         ? 'bg-amber-900 hover:bg-amber-800 text-white border-amber-700' 
                                         : isNormal
@@ -257,10 +328,10 @@ export const QuestView: React.FC<QuestViewProps> = ({ player, onStartQuest, play
   const hardQuest = selectedRegion.quests.find(q => q.difficulty === QuestDifficulty.HARD) || getFallbackQuest(selectedRegion, QuestDifficulty.HARD);
   
   // Extra Epic Quest for Region 5+ (Index 4+)
-  // We look for a quest that is EPIC but NOT the main story boss (which is usually last)
-  // Or simply allow the 4th slot to be a distinct Epic quest if it exists.
-  const hasEpicSlot = currentRegionIndex >= 4; // Region 5 is index 4
-  const epicQuest = selectedRegion.quests.find(q => q.difficulty === QuestDifficulty.EPIC && q !== selectedRegion.quests[selectedRegion.quests.length-1]);
+  const hasEpicSlot = currentRegionIndex >= 4; 
+  // Epic quest is any quest marked EPIC that IS NOT the last quest (the boss)
+  const bossQuestId = selectedRegion.quests[selectedRegion.quests.length - 1].id;
+  const epicQuest = selectedRegion.quests.find(q => q.difficulty === QuestDifficulty.EPIC && q.id !== bossQuestId);
 
   return (
     <div className="animate-in fade-in duration-500 pb-20">
@@ -360,13 +431,18 @@ export const QuestView: React.FC<QuestViewProps> = ({ player, onStartQuest, play
                     </div>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <MissionCard quest={easyQuest} player={player} onStart={onStartQuest} />
+                        <MissionCard 
+                            quest={easyQuest} 
+                            player={player} 
+                            onStart={onStartQuest} 
+                            isTutorialHighlight={player.tutorialStep === 3} // Highlight if tutorial step is 3
+                        />
                         <MissionCard quest={normalQuest} player={player} onStart={onStartQuest} />
                         <MissionCard quest={hardQuest} player={player} onStart={onStartQuest} />
                     </div>
                 </div>
 
-                {/* 3. Epic Quest (Region 5+) */}
+                {/* 3. Epic Quest (Region 5+ / Level 20+) */}
                 {hasEpicSlot && epicQuest && (
                     <div className="mb-8">
                         <div className="flex items-center gap-4 mb-6">
@@ -377,7 +453,7 @@ export const QuestView: React.FC<QuestViewProps> = ({ player, onStartQuest, play
                             <span className="h-px flex-1 bg-gradient-to-r from-transparent via-purple-900 to-transparent"></span>
                         </div>
                         <div className="max-w-2xl mx-auto">
-                            <MissionCard quest={epicQuest} player={player} onStart={onStartQuest} />
+                            <EpicMissionCard quest={epicQuest} player={player} onStart={onStartQuest} />
                         </div>
                     </div>
                 )}

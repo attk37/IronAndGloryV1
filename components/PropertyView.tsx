@@ -56,7 +56,7 @@ export const PropertyView: React.FC<PropertyViewProps> = ({ player, onBuyPropert
           <div className="z-10 flex flex-col items-end">
               <div className="text-xs text-stone-500 uppercase font-bold tracking-widest mb-1">Toplam Pasif Gelir</div>
               <div className="text-4xl font-mono font-bold text-green-400 flex items-center gap-2 drop-shadow-md">
-                  +{totalIncome} <span className="text-sm text-stone-600">/sn</span>
+                  +{totalIncome.toLocaleString('tr-TR')} <span className="text-sm text-stone-600">/sn</span>
               </div>
           </div>
       </div>
@@ -103,7 +103,7 @@ export const PropertyView: React.FC<PropertyViewProps> = ({ player, onBuyPropert
                           </div>
                           <div className="flex flex-col items-end">
                               <span className="text-[10px] text-stone-600 uppercase font-bold">Toplam</span>
-                              <span className="text-stone-300 font-mono font-bold">+{ownedCount * prop.incomePerSecond}/sn</span>
+                              <span className="text-stone-300 font-mono font-bold">+{(ownedCount * prop.incomePerSecond).toLocaleString('tr-TR')}/sn</span>
                           </div>
                       </div>
 
@@ -118,8 +118,8 @@ export const PropertyView: React.FC<PropertyViewProps> = ({ player, onBuyPropert
                       >
                           <span>Satın Al</span>
                           <div className="flex items-center gap-1 bg-black/20 px-2 py-0.5 rounded">
-                              <IconCoin size={12} className={canAfford ? 'text-amber-300' : 'text-stone-500'} />
-                              <span>{currentCost}</span>
+                              <IconCoin size={12} className={canAfford ? 'text-slate-300' : 'text-stone-500'} />
+                              <span>{currentCost.toLocaleString('tr-TR')}</span>
                           </div>
                       </button>
                   </div>

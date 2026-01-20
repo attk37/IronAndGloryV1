@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react';
+
+import React, { useEffect, useState, useRef } from 'react';
 import { Player, Enemy } from '../types';
-import { EnemyAvatar, IconCrossedSwords, IconSword, IconShield } from './Icons';
-import { Sparkles } from 'lucide-react';
+import { EnemyAvatar, IconCrossedSwords } from './Icons';
+import { FastForward } from 'lucide-react';
 
 interface CombatSimulationModalProps {
   player: Player;
@@ -24,36 +25,69 @@ export const CombatSimulationModal: React.FC<CombatSimulationModalProps> = ({ pl
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [clashEffect, setClashEffect] = useState(false);
 
+  // Refs prevent the interval from resetting if the parent component re-renders (fixing the stutter)
+  const intervalRef = useRef<number | null>(null);
+  const onCompleteRef = useRef(onComplete);
+  const playSfxRef = useRef(playSfx);
+
+  // Update refs when props change so the closure inside useEffect always has the latest function
+  useEffect(() => { onCompleteRef.current = onComplete; }, [onComplete]);
+  useEffect(() => { playSfxRef.current = playSfx; }, [playSfx]);
+
+  const handleSkip = () => {
+      if (intervalRef.current) {
+          window.clearInterval(intervalRef.current);
+      }
+      setProgress(100);
+      // Call complete immediately
+      onCompleteRef.current();
+  };
+
   useEffect(() => {
     const duration = 3000; // 3 seconds simulation
     const intervalTime = 50;
     const steps = duration / intervalTime;
     let currentStep = 0;
 
-    const timer = setInterval(() => {
+    intervalRef.current = window.setInterval(() => {
       currentStep++;
-      const newProgress = (currentStep / steps) * 100;
+      const newProgress = Math.min(100, (currentStep / steps) * 100);
       setProgress(newProgress);
 
-      // Random shake/clash effect
+      // Random shake/clash effect logic
       if (currentStep % 10 === 0) {
           setClashEffect(true);
           setTimeout(() => setClashEffect(false), 200);
           setPhraseIndex(prev => (prev + 1) % BATTLE_PHRASES.length);
-          if (playSfx) playSfx('sword_clash');
+          
+          if (playSfxRef.current) {
+              playSfxRef.current('sword_clash');
+          }
       }
 
       if (currentStep >= steps) {
-        clearInterval(timer);
-        setTimeout(onComplete, 200); // Small buffer before closing
+        if (intervalRef.current) window.clearInterval(intervalRef.current);
+        setTimeout(() => onCompleteRef.current(), 200); // Small buffer before closing
       }
     }, intervalTime);
 
-    return () => clearInterval(timer);
-  }, [onComplete, playSfx]);
+    return () => {
+        if (intervalRef.current) window.clearInterval(intervalRef.current);
+    };
+  }, []); // Empty dependency array ensures simulation runs only once upon mount
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/95 backdrop-blur-md animate-in fade-in duration-300">
+      
+      {/* Skip Button */}
+      <button 
+        onClick={handleSkip}
+        className="absolute top-6 right-6 z-50 flex items-center gap-2 px-4 py-2 bg-stone-900 border border-stone-700 rounded-full text-stone-400 hover:text-white hover:border-amber-500 hover:bg-stone-800 transition-all uppercase text-xs font-bold tracking-wider group"
+      >
+          <span>Atla</span>
+          <FastForward size={14} className="group-hover:translate-x-1 transition-transform" />
+      </button>
+
       <div className="w-full max-w-4xl relative overflow-hidden flex flex-col items-center justify-center h-full md:h-auto md:py-20">
         
         {/* Background Effects */}
@@ -107,7 +141,7 @@ export const CombatSimulationModal: React.FC<CombatSimulationModalProps> = ({ pl
                 <span>Savaş Başladı</span>
                 <span>Sonuç Bekleniyor</span>
             </div>
-            <div className="h-2 bg-stone-900 rounded-full overflow-hidden border border-stone-800">
+            <div className="h-2 bg-stone-900 rounded-full overflow-hidden border border-stone-800 cursor-pointer" onClick={handleSkip} title="Savaşı Hızlandır">
                 <div 
                     className="h-full bg-gradient-to-r from-amber-800 via-amber-500 to-white shadow-[0_0_10px_rgba(245,158,11,0.8)] transition-all duration-75 ease-linear" 
                     style={{ width: `${progress}%` }}

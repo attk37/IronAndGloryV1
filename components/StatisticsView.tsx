@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Player } from '../types';
 import { IconStats, IconSword, IconSkull, IconCoin, IconScroll } from './Icons';
 import { Trophy, ShieldAlert, Target } from 'lucide-react';
@@ -80,7 +80,7 @@ export const StatisticsView: React.FC<StatisticsViewProps> = ({ player }) => {
                 label="Kazanılan Gümüş" 
                 value={player.records.totalSilverEarned.toLocaleString()} 
                 icon={<IconCoin size={24} />} 
-                color="text-amber-300" 
+                color="text-slate-300" 
             />
             <StatCard 
                 label="Kazanılan Tecrübe" 

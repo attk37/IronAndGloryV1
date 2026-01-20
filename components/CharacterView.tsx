@@ -40,7 +40,7 @@ const StatRow = ({ label, value, bonusValue = 0, canUpgrade, onUpgrade, cost, ic
           : 'bg-stone-950 border-stone-800 text-stone-700 cursor-not-allowed'
         }`}
       >
-        <span className="text-[10px] font-bold font-mono">{cost}</span>
+        <span className="text-[10px] font-bold font-mono">{cost.toLocaleString('tr-TR')}</span>
         <ArrowUp size={12} />
       </button>
     </div>
@@ -65,12 +65,16 @@ const ElementalStat = ({ icon: Icon, label, value, res, color }: any) => (
 );
 
 // Equipment Slot Component
-const EquipmentSlot = ({ item, type, icon: Icon, onClick, slotName }: { item: Item | null, type: string, icon: any, onClick: () => void, slotName?: string }) => (
+const EquipmentSlot = ({ item, type, icon: Icon, onClick, slotName }: { item: Item | null, type: string, icon: any, onClick: () => void, slotName?: string }) => {
+  const isGlowing = item?.upgradeLevel === 9; // Max Level Shine
+
+  return (
   <div onClick={onClick} className="relative group cursor-pointer w-[50px] h-[50px] md:w-[60px] md:h-[60px]">
       {/* Background Placeholder */}
       <div className={`absolute inset-0 bg-[#0c0a09] border-2 rounded-lg flex items-center justify-center transition-all duration-300 shadow-inner
         ${item 
-            ? item.rarity === 'Efsanevi' ? 'border-amber-600/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
+            ? isGlowing ? 'border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.5)] animate-pulse' // +9 GLOW
+            : item.rarity === 'Efsanevi' ? 'border-amber-600/60 shadow-[0_0_15px_rgba(245,158,11,0.2)]' 
             : item.rarity === 'Destansı' ? 'border-purple-600/60 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
             : item.rarity === 'Nadir' ? 'border-cyan-600/60 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
             : 'border-stone-500/60'
@@ -88,7 +92,9 @@ const EquipmentSlot = ({ item, type, icon: Icon, onClick, slotName }: { item: It
 
       {/* Upgrade Level Badge */}
       {item?.upgradeLevel ? (
-          <div className="absolute -top-1 -right-1 z-20 bg-amber-700 text-white text-[8px] font-bold px-1 py-0.5 rounded shadow border border-amber-600">
+          <div className={`absolute -top-1 -right-1 z-20 text-[8px] font-bold px-1 py-0.5 rounded shadow border
+             ${isGlowing ? 'bg-yellow-500 text-black border-yellow-300' : 'bg-amber-700 text-white border-amber-600'}
+          `}>
               +{item.upgradeLevel}
           </div>
       ) : null}
@@ -112,7 +118,8 @@ const EquipmentSlot = ({ item, type, icon: Icon, onClick, slotName }: { item: It
          {item && <div className="text-[10px] text-green-400 mt-1">+{item.bonus} Etki</div>}
       </div>
   </div>
-);
+  );
+};
 
 export const CharacterView: React.FC<CharacterViewProps> = ({ player, onUpgradeStat, onEquip, onUnequip, onSell, onUse, onExpandInventory, playSfx }) => {
   const [selectedItem, setSelectedItem] = useState<{ item: Item, source: 'inventory' | 'equipment', slot?: keyof Player['equipment'] } | null>(null);
@@ -185,7 +192,7 @@ export const CharacterView: React.FC<CharacterViewProps> = ({ player, onUpgradeS
                        </div>
                        <div className="bg-stone-900 p-3 rounded text-center">
                            <div className="text-[10px] text-stone-500 uppercase font-bold">Değer</div>
-                           <div className="text-amber-500 font-bold text-xl font-mono">{selectedItem.item.cost}</div>
+                           <div className="text-amber-500 font-bold text-xl font-mono">{selectedItem.item.cost.toLocaleString('tr-TR')}</div>
                        </div>
                   </div>
 
@@ -293,14 +300,14 @@ export const CharacterView: React.FC<CharacterViewProps> = ({ player, onUpgradeS
 
               {/* Combat Summary Bars */}
               <div className="grid grid-cols-2 gap-4 mt-4">
-                  <div className="bg-stone-950/50 rounded px-3 py-2 border border-stone-800 flex items-center justify-between">
+                  <div className="bg-stone-900/50 rounded px-3 py-2 border border-stone-800 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                           <IconSword size={14} className="text-red-500" />
                           <span className="text-[10px] uppercase font-bold text-stone-500">Hasar</span>
                       </div>
                       <span className="font-mono text-lg font-bold text-stone-200">{avgDamage}</span>
                   </div>
-                  <div className="bg-stone-950/50 rounded px-3 py-2 border border-stone-800 flex items-center justify-between">
+                  <div className="bg-stone-900/50 rounded px-3 py-2 border border-stone-800 flex items-center justify-between">
                       <div className="flex items-center gap-2">
                           <IconShield size={14} className="text-blue-500" />
                           <span className="text-[10px] uppercase font-bold text-stone-500">Zırh</span>
@@ -353,6 +360,10 @@ export const CharacterView: React.FC<CharacterViewProps> = ({ player, onUpgradeS
                               let IconComp = IconGem;
                               if (item) IconComp = getItemIcon(item) as any;
 
+                              // Highlight Logic for Tutorial
+                              const isTutorialItem = item && item.id === 'starting_knife' && player.tutorialStep === 1;
+                              const isGlowing = item?.upgradeLevel === 9; // +9 Item Glow in Inventory
+
                               if (isLocked) {
                                   if (isNextUnlock && onExpandInventory) {
                                       const cost = calculateSlotCost(globalIndex);
@@ -361,7 +372,7 @@ export const CharacterView: React.FC<CharacterViewProps> = ({ player, onUpgradeS
                                                <div className="absolute inset-0 bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors"></div>
                                                <Lock size={10} className="text-stone-500 group-hover:text-amber-500 mb-0.5" />
                                                <div className="text-[8px] font-bold text-stone-500 group-hover:text-amber-400 flex items-center gap-0.5">
-                                                  {cost} <span className="text-[6px]">g</span>
+                                                  {cost.toLocaleString('tr-TR')} <span className="text-[6px]">g</span>
                                                </div>
                                           </div>
                                       );
@@ -374,15 +385,20 @@ export const CharacterView: React.FC<CharacterViewProps> = ({ player, onUpgradeS
                                        onClick={() => item && handleSelectItem({item, source: 'inventory'})} 
                                        className={`aspect-square rounded-md border relative cursor-pointer group hover:scale-105 transition-transform
                                        ${item 
-                                           ? 'bg-stone-900 border-stone-700 hover:border-stone-500' 
-                                           : 'bg-[#151210] border-stone-800 hover:bg-stone-900'}`}>
+                                           ? isGlowing 
+                                              ? 'bg-stone-900 border-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.3)] animate-pulse' 
+                                              : 'bg-stone-900 border-stone-700 hover:border-stone-500' 
+                                           : 'bg-[#151210] border-stone-800 hover:bg-stone-900'}
+                                       ${isTutorialItem ? 'ring-2 ring-green-500 animate-pulse bg-green-900/20' : ''}
+                                       `}>
                                       {item && <IconComp size={20} className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 ${
+                                          isGlowing ? 'text-yellow-400' :
                                           item.rarity === 'Efsanevi' ? 'text-amber-500' : 
                                           item.rarity === 'Destansı' ? 'text-purple-400' : 
                                           item.rarity === 'Nadir' ? 'text-cyan-400' : 'text-stone-400'
                                       }`} />}
                                       
-                                      {item?.upgradeLevel ? <span className="absolute bottom-0 right-0.5 text-[8px] font-bold text-amber-500">+{item.upgradeLevel}</span> : null}
+                                      {item?.upgradeLevel ? <span className={`absolute bottom-0 right-0.5 text-[8px] font-bold ${isGlowing ? 'text-yellow-400' : 'text-amber-500'}`}>+{item.upgradeLevel}</span> : null}
                                   </div>
                               )
                           })}

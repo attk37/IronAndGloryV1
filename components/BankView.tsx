@@ -71,16 +71,16 @@ export const BankView: React.FC<BankViewProps> = ({ player, onRedeemCode }) => {
             {PACKAGES.map((pkg, idx) => (
                 <div key={idx} className="bg-[#151210] border border-stone-800 rounded-xl p-6 flex flex-col items-center hover:border-amber-700 transition-all hover:-translate-y-1 group">
                     <div className="w-16 h-16 bg-stone-900 rounded-full flex items-center justify-center border-2 border-stone-700 mb-4 group-hover:border-amber-600 transition-colors shadow-xl">
-                        <IconCoin size={32} className="text-amber-500" />
+                        <IconCoin size={32} className="text-slate-300" />
                     </div>
                     <h4 className="text-lg font-bold text-stone-200 mb-4">{pkg.name}</h4>
                     
                     <div className="space-y-2 mb-6 text-center w-full">
                         <div className="bg-stone-950 p-2 rounded border border-stone-800 flex items-center justify-center gap-2">
-                            <IconCoin size={16} className="text-amber-500" /> <span className="font-mono font-bold text-stone-300">{pkg.silver.toLocaleString()}</span>
+                            <IconCoin size={16} className="text-slate-300" /> <span className="font-mono font-bold text-stone-300">{pkg.silver.toLocaleString('tr-TR')}</span>
                         </div>
                         <div className="bg-stone-950 p-2 rounded border border-stone-800 flex items-center justify-center gap-2">
-                            <IconGem size={16} className="text-purple-500" /> <span className="font-mono font-bold text-purple-300">{pkg.gems.toLocaleString()}</span>
+                            <IconGem size={16} className="text-purple-500" /> <span className="font-mono font-bold text-purple-300">{pkg.gems.toLocaleString('tr-TR')}</span>
                         </div>
                     </div>
 
